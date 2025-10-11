@@ -1,0 +1,55 @@
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+type student struct {
+	Name  string
+	Grade int
+}
+
+func main() {
+
+	// number := 23
+
+	// reflectValue := reflect.ValueOf(number)
+
+	// fmt.Println("tipe variabel :", reflectValue.Type())
+	// fmt.Println("nilai variabel :", reflectValue.Interface().(int))
+
+	// Example usage of getPropertyInfo
+	// s := &student{Name: "Alice", Grade: 90}
+	// s.getPropertyInfo()
+
+	var s1 = &student{Name: "john wick", Grade: 2}
+	fmt.Println("nama :", s1.Name)
+
+	var reflectValue = reflect.ValueOf(s1)
+	fmt.Println(reflectValue)
+	var method = reflectValue.MethodByName("SetName")
+	method.Call([]reflect.Value{
+		reflect.ValueOf("wick"),
+	})
+	fmt.Println("nama :", s1.Name)
+
+}
+
+func (s *student) SetName(name string) {
+	s.Name = name
+}
+
+func (s *student) getPropertyInfo() {
+	var reflectValue = reflect.ValueOf(s)
+	if reflectValue.Kind() == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+	}
+	var reflectType = reflectValue.Type()
+	for i := 0; i < reflectValue.NumField(); i++ {
+		fmt.Println("nama :", reflectType.Field(i).Name)
+		fmt.Println("tipe data :", reflectType.Field(i).Type)
+		fmt.Println("nilai :", reflectValue.Field(i).Interface())
+		fmt.Println("")
+	}
+}

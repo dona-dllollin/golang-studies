@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <title>Learning html/template Functions</title>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <td>Gender</td>
+        <td>:</td>
+        {{$gender := .Gender}}
+        <td>{{$gender}}</td>
+      </tr>
+      <tr>
+        <td>hobbies</td>
+        <td>:</td>
+        <td>{{range $index, $elem := .Hobbies}} {{$elem}} {{end}}</td>
+      </tr>
+      <tr>
+        <td>Affiliation</td>
+        <td>:</td>
+        <td>{{.Info.Affiliation}} ({{.Info.GetAffiliationDetailInfo}})</td>
+      </tr>
+      {{with .Info}}
+      <tr>
+        <td>Address</td>
+        <td>:</td>
+        <td>{{.Address}}</td>
+      </tr>
+      {{end}} {{if eq .Name "Bruce Wayne"}}
+      <tr>
+        <td colspan="2" style="font-weight: bold">I'm the Batman!</td>
+      </tr>
+      {{end}}
+    </table>
+  </body>
+</html>
