@@ -81,5 +81,5 @@ func routeSubmitPost(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte("done"))
 
-	http.Error(w, "", http.StatusBadRequest)
+	
 }
