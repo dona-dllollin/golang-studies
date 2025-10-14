@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Download File</title>
+    <!-- <script>
+      function Yo() {
+        var self = this;
+        var $ul = document.getElementById("list-files");
+
+        var renderData = function (res) {
+          res.forEach(function (each) {
+            var $li = document.createElement("li");
+            var $a = document.createElement("a");
+
+            $li.innerText = "download";
+            $li.appendChild($a);
+            $ul.appendChild($li);
+
+            $a.href = "/download?path=" + encodeURI(each.path);
+            $a.innerText = each.filename;
+            $a.target = "_blank";
+          });
+        };
+
+        var getAllListFiles = function () {
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", "/list-files");
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+              var json = JSON.parse(xhr.responseText);
+              renderData(json);
+            }
+          };
+          xhr.send();
+        };
+
+        self.init = function () {
+          getAllListFiles();
+        };
+      }
+
+      window.onload = function () {
+        new Yo().init();
+      };
+    </script> -->
+
+    <script>
+      async function loadFiles() {
+        const ul = document.getElementById("list-files");
+
+        try {
+          const res = await fetch("/list-files");
+          const data = await res.json();
+
+          data.forEach((each) => {
+            const li = document.createElement("li");
+            const a = document.createElement("a");
+
+            li.innerText = "download ";
+            a.href = "/download?path=" + encodeURI(each.path);
+            a.innerText = each.filename;
+            a.target = "_blank";
+
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+        } catch (err) {
+          console.error("Gagal memuat file:", err);
+        }
+      }
+
+      window.addEventListener("load", loadFiles);
+    </script>
+  </head>
+  <body>
+    <ul id="list-files"></ul>
+  </body>
+</html>
