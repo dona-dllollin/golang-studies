@@ -10,7 +10,7 @@ import (
 type M map[string]interface{}
 
 func main() {
-	r : echo.New()
+	r := echo.New()
 
 	// ===> curl -X GET http://localhost:9000/
 	r.GET("/", func(ctx echo.Context) error {
