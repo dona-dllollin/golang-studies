@@ -10,7 +10,7 @@ const (
 	CONFIG_SMTP_PORT     = 587
 	CONFIG_SENDER_NAME   = "PT. Makmur Subur Jaya <donadlollin@gmail.com>"
 	CONFIG_AUTH_EMAIL    = "donadlollin@gmail.com"
-	CONFIG_AUTH_PASSWORD = "yorv gnyd ycsa femb" // gunakan App Password, bukan password biasa!
+	CONFIG_AUTH_PASSWORD = "secretpassword" // gunakan App Password, bukan password biasa!
 )
 
 func main() {
