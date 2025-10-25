@@ -26,7 +26,7 @@ func main() {
 	const FTP_USERNAME = "admin"
 	const FTP_PASSWORD = "123456"
 
-	// ============== CONNECT TO FTP SERVER
+	// ============== CONNECT TO FTP SERVERtouch 
 
 	conn, err := ftp.Dial(FTP_ADDR)
 	if err != nil {
