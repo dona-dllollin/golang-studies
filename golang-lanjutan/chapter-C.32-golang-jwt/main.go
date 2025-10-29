@@ -1,4 +1,4 @@
-package main 
+package main
 
 import (
 	"context"
@@ -8,31 +8,30 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
 	jwt "github.com/golang-jwt/jwt/v5"
 	gubrak "github.com/novalagung/gubrak/v2"
-	"time"
 )
 
 type M map[string]interface{}
 
-
+type contextKey string
 
 var (
-	APPLICATION_NAME = "My Simple JWT App"
+	APPLICATION_NAME          = "My Simple JWT App"
 	LOGIN_EXPIRATION_DURATION = time.Duration(1) * time.Hour
-	JWT_SIGNING_METHOD = jwt.SigningMethodHS256
-	JWT_SIGNATURE_KEY = []byte("the secret of kalimdor")
+	JWT_SIGNING_METHOD        = jwt.SigningMethodHS256
+	JWT_SIGNATURE_KEY         = []byte("the secret of kalimdor")
+	userInfoKey               = contextKey("userInfo")
 )
 
 type MyClaims struct {
 	jwt.RegisteredClaims
 	Username string `json:"Username"`
-	Email string `json:"Email"`
-	Group string `json:"Group"`
+	Email    string `json:"Email"`
+	Group    string `json:"Group"`
 }
-
-
-
 
 func main() {
 	mux := new(CustomMux)
@@ -47,16 +46,17 @@ func main() {
 
 	fmt.Println("Starting server at", server.Addr)
 	server.ListenAndServe()
+
 }
 
 func HandlerIndex(w http.ResponseWriter, r *http.Request) {
-	userInfo := r.Context().Value("userInfo").(jwt.MapClaims)
+	userInfo := r.Context().Value(userInfoKey).(jwt.MapClaims)
 	message := fmt.Sprintf("hello %s (%s)", userInfo["Username"], userInfo["Group"])
 	w.Write([]byte(message))
 }
 
 func HandlerLogin(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST"{
+	if r.Method != "POST" {
 		http.Error(w, "Unsupported http method", http.StatusBadRequest)
 		return
 	}
@@ -67,21 +67,21 @@ func HandlerLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid username or password", http.StatusBadRequest)
 		return
 	}
-	
+
 	ok, userInfo := authenticateUser(username, password)
 	if !ok {
 		http.Error(w, "Invalid username or password", http.StatusBadRequest)
 		return
 	}
-	
+
 	claims := MyClaims{
-	RegisteredClaims: jwt.RegisteredClaims{
-		Issuer: APPLICATION_NAME,
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(LOGIN_EXPIRATION_DURATION)), // ✅ pakai *jwt.NumericDate,
-	},
-	Username: userInfo["username"].(string),
-	Email: userInfo["email"].(string),
-	Group: userInfo["group"].(string),
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    APPLICATION_NAME,
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(LOGIN_EXPIRATION_DURATION)), // ✅ pakai *jwt.NumericDate,
+		},
+		Username: userInfo["username"].(string),
+		Email:    userInfo["email"].(string),
+		Group:    userInfo["group"].(string),
 	}
 
 	token := jwt.NewWithClaims(JWT_SIGNING_METHOD, claims)
@@ -123,47 +123,46 @@ func authenticateUser(username, password string) (bool, M) {
 }
 
 func MiddlewareJWTAuthorization(next http.Handler) http.Handler {
- return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/login" {
-		next.ServeHTTP(w, r)
-		return
-	}
-
-	authorizationHeader := r.Header.Get("Authorization")
-	if !strings.Contains(authorizationHeader, "Bearer"){
-		http.Error(w, "Invalid token", http.StatusBadRequest)
-		return
-	}
-
-	tokenString := strings.Replace(authorizationHeader, "Bearer ", "", -1)
-
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if method, ok := token.Method.(*jwt.SigningMethodHMAC);  !ok {
-			return nil, fmt.Errorf("Signing method invalid")
-		} else if method != JWT_SIGNING_METHOD {
-			return nil, fmt.Errorf("Signing method invalid")
-			
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/login" {
+			next.ServeHTTP(w, r)
+			return
 		}
-		return JWT_SIGNATURE_KEY, nil
-	})
-	if err != nil {
+
+		authorizationHeader := r.Header.Get("Authorization")
+		if !strings.Contains(authorizationHeader, "Bearer") {
+			http.Error(w, "Invalid token", http.StatusBadRequest)
+			return
+		}
+
+		tokenString := strings.Replace(authorizationHeader, "Bearer ", "", -1)
+
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if method, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("signing method invalid")
+			} else if method != JWT_SIGNING_METHOD {
+				return nil, fmt.Errorf("signing method invalid")
+
+			}
+			return JWT_SIGNATURE_KEY, nil
+		})
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		
-	claims, ok := token.Claims.(jwt.MapClaims)
 
-	if !ok || !token.Valid {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+		claims, ok := token.Claims.(jwt.MapClaims)
 
-	ctx := context.WithValue(context.Background(), "userInfo", claims)
-	r = r.WithContext(ctx)
+		if !ok || !token.Valid {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
-	next.ServeHTTP(w, r)
+		ctx := context.WithValue(context.Background(), userInfoKey, claims)
+		r = r.WithContext(ctx)
 
- })
+		next.ServeHTTP(w, r)
+
+	})
 
 }
-
